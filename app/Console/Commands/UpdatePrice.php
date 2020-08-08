@@ -101,23 +101,23 @@ class UpdatePrice extends Command
                 $flema_data = json_decode($outputs1[0], true);
 
 
-
-                /* history details */
-                /* oldest → latest */
+                
+                //history details
+                //oldest → latest
                 foreach ($flema_data['list'] as $i => $flema_product) {
                     if (in_array($flema_product['url'], $history_details_url[$flema_name])) {
                         continue;
                     }
 
-                    /*
-                    title_errorではない場合(title_errorの場合は問答無用でstatus=0)
-                    高速化のため可読性を犠牲
-                    */
+
+                    //title_errorではない場合(title_errorの場合は問答無用でstatus=0)
+                    //高速化のため可読性を犠牲
+                    
                     if ($flema_product['status'] !== 0) {
                         $arguments2 = "{$product->product_id} '{$flema_product['image']}' CheckCardImg";
                         unset($outputs2);
                         exec("{$PYTHON3_PATH} {$EXECUTABLE_FILE} {$arguments2}", $outputs2);
-                        $flema_product['status'] = (int)$outputs2[0]; /* 0 or 1 */
+                        $flema_product['status'] = (int)$outputs2[0]; // 0 or 1
                     }
                     HistoryDetail::forceCreate([
                         'history_id' => 0,
@@ -131,7 +131,7 @@ class UpdatePrice extends Command
                     ]);
                     $history_details_url[$flema_name][] = $flema_product['url'];
                 }
-                if (count($flema_data['list']) > 0) { /* 可読性が良くない */
+                if (count($flema_data['list']) > 0) { // 可読性が良くない
                     $start_product_url = $flema_data['list'][0]['url'];
                     $start_history_detail_id
                         = HistoryDetail::where('product_id', $product->id)
@@ -151,15 +151,27 @@ class UpdatePrice extends Command
                 }
 
 
-                /* 保守 */
-                if ($start_history_detail_id > $end_history_detail_id) {
+                /* 保守 今は気にしない*/
+                /*if ($start_history_detail_id > $end_history_detail_id) {
+                    logger()->info(
+                        "exit error, updating price of product id: {$product->id}, "
+                        ."flema name: {$flema_name} "
+                        ."(start_detail_id: {$start_history_detail_id}, "
+                        ."end_detail_id: {$end_history_detail_id})"
+                    );
                     exit;
-                }
+                }*/
                 
-                /* statusが変更されたため各sample_numでのaverage_priceを再計算 */
+                //以下別ファイルに移動
+                //各サンプル数での平均価格を求める。これも別ファイルに
+                ///statusが変更されたため各sample_numでのaverage_priceを再計算;
+                //計算方法は多分合ってる
                 $flema_data_list_reverse = array_reverse($flema_data['list']);
+                //dd($flema_data_list_reverse);
                 $status_array = array_column($flema_data_list_reverse, 'status');
+                //dd($status_array);
                 $success_products_index = array_keys($status_array, 1);
+                //dd($success_products_index);
                 $sample_num_array = array('1' => array(), '5' => array(), '10' => array());
 
                 foreach ($success_products_index as $success_product_index) {
@@ -171,6 +183,7 @@ class UpdatePrice extends Command
                             = $flema_data_list_reverse[$success_product_index]['price'];
                     }
                 }
+                //dd($sample_num_array);
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
                     if (count($sample_num_array["{$sample_num}"]) === 0) {
                         $flema_data['average_prices']["sample_num_{$sample_num}"] = 0;
@@ -180,8 +193,9 @@ class UpdatePrice extends Command
                         = array_sum($sample_num_array["{$sample_num}"])
                             / count($sample_num_array["{$sample_num}"]);
                 }
+                //dd($flema_data["average_prices"]);
 
-                /* histories */
+                // histories
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
                     if (!$doesnt_exist_sample_num["{$sample_num}"]) {
                         continue;
@@ -196,10 +210,9 @@ class UpdatePrice extends Command
                         'end_detail_id' => $end_history_detail_id
                     ]);
                 }
-
-                /* products */
+                // products
                 if ($flema_name === 'yafuoku') {
-                    /* only yafuoku price */
+                    // only yafuoku price ;
                     $product->fill([
                         'average_price' => (int)$flema_data['average_prices']
                                             ['sample_num_10'],
@@ -214,16 +227,16 @@ class UpdatePrice extends Command
                 logger()->info('rakuma...'.$scraping_num['rakuma']);
             }
             if ($scraping_num['yafuoku'] > $once_max_scraping_num
-                && $scraping_num['rakuma'] > $once_max_scraping_num) {
+                || $scraping_num['rakuma'] > $once_max_scraping_num) {
                 break;
             }
         }
 
         logger()->info(
-            'End updating price (yafuoku Sum '.$scraping_num['yafuoku'].')'
+            "End updating price (yafuoku Sum {$scraping_num['yafuoku']})"
         );
         logger()->info(
-            'End updating price (rakuma Sum '.$scraping_num['rakuma'].')'
+            "End updating price (rakuma Sum {$scraping_num['rakuma']})"
         );
     }
 }

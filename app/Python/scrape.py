@@ -17,8 +17,11 @@ from PIL import Image
 # import matplotlib.pyplot as plt
 # sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
+start_time = time.time()
+
 args = sys.argv
-if args[2] == 'yafuoku' or args[2] == 'rakuma':
+if args[2] == 'yafuoku' or args[2] == 'rakuma'\
+        or args[2] == 'ytest' or args[2] == 'rtest':
     serch_words = args[1].split('+')
     card_name = serch_words[0]
     if len(serch_words) == 3:  # ex ヤムチャ+HUM4-22+ドラゴンボールヒーローズ
@@ -189,7 +192,12 @@ def set_product(data, product_origin_data, flema_name):
     title_error_words_num = get_title_error_words_num(
         product_infos["title"])
 
-    if title_error_words_num == []:  # check_cardは別でやる。処理が遅いため
+    '''
+    is_true_img = check_card(
+        card_number, product_infos["image"][image_index].get("src"))
+    '''
+
+    if title_error_words_num == []:
         status = 1
         data[flema_name]["products"]["success_num"] += 1
     else:
@@ -213,6 +221,8 @@ def scrape_and_set_data(flema_name):
 
     data[flema_name]["origin_data"] = requests.get(
         data[flema_name]["url"].encode('utf-8', 'surrogateescape'))
+    # print(data[flema_name]["url"])
+    # print(data[flema_name]["origin_data"].url)
     data[flema_name]["soup"] = BeautifulSoup(
         data[flema_name]["origin_data"].content, "html.parser")
     data[flema_name]["all_products"] = data[flema_name]["soup"].select(
@@ -233,19 +243,15 @@ def scrape_and_set_data(flema_name):
     set_average_price_each_sample_num(data, flema_name)
 
 
-def show_data():
-    print('yafuoku', len(data["yafuoku"]["products"]["success"]))
-    print('yafuoku', len(data["yafuoku"]["products"]["error"]))
-    print(len(data["rakuma"]["products"]["success"]))
-    print(len(data["rakuma"]["products"]["error"]))
-    for i, flema_name in enumerate(data):
-        print(flema_name)
-        for product_infos in data[flema_name]["products"]["success"]["list"]:
-            print(product_infos["image"])
-            # check_card(product_infos["image"])
-            print(product_infos["url"])
-            print(product_infos["title"].encode())
-            print(product_infos["price"])
+def show_data(flema_name):
+    for i, product_infos in enumerate(data[flema_name]["products"]["list"]):
+        print(i)
+        print(product_infos["image"])
+        print(product_infos["url"])
+        print(product_infos["title"])
+        print(product_infos["price"])
+        print(product_infos["status"])
+        print('\n')
 
 
 def show_products_object():
@@ -288,12 +294,19 @@ elif args[2] == 'ProductController':
     main()
     show_products_object()
     # show_data()
+elif args[2] == 'ytest':
+    scrape_and_set_data('yafuoku')
+    show_data('yafuoku')
+elif args[2] == 'rtest':
+    scrape_and_set_data('rakuma')
+    show_data('rakuma')
 elif args[3] == 'CheckCardImg':
     if check_card(args[1], args[2]):
         print(1)
     else:
         print(0)
 
+elapsed_time = time.time() - start_time
 '''
 for aaa in data["rakuma"]["products"]["list"]:
     print(aaa["end_date_time"])

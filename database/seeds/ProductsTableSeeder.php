@@ -17,9 +17,31 @@ class ProductsTableSeeder extends Seeder
     public function run()
     {
 
-        //ProductHistory::truncate();
-
         
+        
+        /*
+        $products = Product::get();
+        foreach ($products as $product) {
+            $histories = History::where('product_id', $product->id)
+            ->where('start_detail_id', '!=', 0)->get();
+            foreach ($histories as $history) {
+                $start_detail = HistoryDetail::find($history->start_detail_id);
+                if (is_null($start_detail) || $start_detail->product_id !== $product->id) {
+                    $history->fill([
+                        'start_detail_id' => 0
+                    ])->save();
+                }
+                $end_detail = HistoryDetail::find($history->end_detail_id);
+                if (is_null($end_detail) || $end_detail->product_id !== $product->id) {
+                    $history->fill([
+                        'end_detail_id' => 0
+                    ])->save();
+                }
+            }
+        }
+        */
+
+        /*
         logger()->info('Start updating price');
         
         require app_path('Php/vardata.php');
@@ -36,6 +58,7 @@ class ProductsTableSeeder extends Seeder
 
         $products = Product::where('product_id', 'like', '%+CP')->get();
 
+        */
         /*
         history_detailsテーブル初期データ挿入プログラム 多分、今後使わない
         foreach ($products as $product) {
@@ -76,16 +99,17 @@ class ProductsTableSeeder extends Seeder
             }
         }*/
 
+        /*
         for ($i = 1; $i <= 88; $i++) {
             foreach ($FLEMA_LIST as $flema_name) {
                 $histories = History::where('product_id', $i)
                     ->whereDate('created_at', $NOW_YMD)->where('flea_market_name', $flema_name)->get();
 
-                $history_details = HistoryDetail::where('product_id', $i) /* oldest → latest */
+                $history_details = HistoryDetail::where('product_id', $i) // oldest → latest
                         ->where('flema', $flema_name)
                         ->whereBetween('id', [$histories[0]['start_detail_id'], $histories[0]['end_detail_id']])
                         ->get()->toArray();
-                $history_details_reverse = array_reverse($history_details); /* latest → oldest */
+                $history_details_reverse = array_reverse($history_details); // latest → oldest 
                 $status_array = array_column($history_details_reverse, 'status');
                 $success_products_index = array_keys($status_array, 1);
                 $sample_num_array = array('1' => array(), '5' => array(), '10' => array());
@@ -120,7 +144,9 @@ class ProductsTableSeeder extends Seeder
                     'average_price' => $sample_num_average_price_array["10"]
                 ])->save();
             }
-        }
+        }*/
+
+        
 
 
         /* history_detailsテーブルのstatusを更新 多分、後々使う */
