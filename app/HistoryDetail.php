@@ -11,6 +11,6 @@ class HistoryDetail extends Model
     ];
 
     protected $guarded = [
-        'history_id', 'product_id', 'flema', 'price', 'title', 'url', 'img_url', 'end_date_time'
+        'product_id', 'flema', 'price', 'title', 'url', 'img_url', 'end_date_time'
     ];
 }

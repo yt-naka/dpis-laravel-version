@@ -231,9 +231,11 @@ def scrape_and_set_data(flema_name):
     for i, product in enumerate(data[flema_name]["all_products"]):
         set_product(data, product, flema_name)
 
+        '''
         if data[flema_name]["products"]["success_num"]\
                 >= MAX_SAMPLE_NUM:
             break
+        '''
 
         if flema_name == 'yafuoku' and len(
                 data[flema_name]["products"]["list"])\

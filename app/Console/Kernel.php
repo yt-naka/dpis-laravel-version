@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\UpdatePrice::Class,
+        \App\Console\Commands\InspectHistoryDetailTable::class
     ];
 
     /**
@@ -24,9 +25,6 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')
-        //          ->hourly();
-        
         
         /*
         $schedule->command('updateprice:info')->timezone('Asia/Tokyo')

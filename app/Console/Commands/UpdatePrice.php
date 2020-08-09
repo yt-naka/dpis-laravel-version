@@ -8,6 +8,7 @@ use \App\Product; // add
 use \App\History; // add
 use Carbon\Carbon; // add
 use \App\HistoryDetail; // add
+use Illuminate\Support\Facades\Log; // add
 
 class UpdatePrice extends Command
 {
@@ -42,13 +43,18 @@ class UpdatePrice extends Command
      */
     public function handle()
     {
-        logger()->info('Start updating price');
+        Log::info('Start updating price');
         
         require app_path('Php/vardata.php');
         require app_path('Php/function.php');
 
         $products = Product::get();
         $scraping_num = array(
+            'yafuoku' => 0,
+            'rakuma' => 0
+        );
+
+        $start_scraping_product_id = array(
             'yafuoku' => 0,
             'rakuma' => 0
         );
@@ -97,6 +103,10 @@ class UpdatePrice extends Command
                 $arguments1 = "{$product->name}+{$product->product_id}+ドラゴンボールヒーローズ {$flema_name}";
                 unset($outputs1);
                 exec("{$PYTHON3_PATH} {$EXECUTABLE_FILE} {$arguments1}", $outputs1);
+                if ($start_scraping_product_id[$flema_name] === 0) {
+                    $start_scraping_product_id[$flema_name] = $product->id;
+                }
+                $end_scraping_product_id[$flema_name] = $product->id;
                 $scraping_num[$flema_name]++;
                 $flema_data = json_decode($outputs1[0], true);
 
@@ -221,10 +231,10 @@ class UpdatePrice extends Command
             }
 
             if ($scraping_num['yafuoku'] % 50 === 0 && $scraping_num['yafuoku'] !== 0) {
-                logger()->info('yafuoku...'.$scraping_num['yafuoku']);
+                Log::info('yafuoku...'.$scraping_num['yafuoku']);
             }
             if ($scraping_num['rakuma'] % 50 === 0 && $scraping_num['rakuma'] !== 0) {
-                logger()->info('rakuma...'.$scraping_num['rakuma']);
+                Log::info('rakuma...'.$scraping_num['rakuma']);
             }
             if ($scraping_num['yafuoku'] > $once_max_scraping_num
                 || $scraping_num['rakuma'] > $once_max_scraping_num) {
@@ -232,11 +242,17 @@ class UpdatePrice extends Command
             }
         }
 
-        logger()->info(
-            "End updating price (yafuoku Sum {$scraping_num['yafuoku']})"
+        Log::info(
+            "End updating price product-id: "
+            ."{$start_scraping_product_id['yafuoku']} ~ "
+            ."{$end_scraping_product_id['yafuoku']} "
+            ."(yafuoku Sum {$scraping_num['yafuoku']})"
         );
-        logger()->info(
-            "End updating price (rakuma Sum {$scraping_num['rakuma']})"
+        Log::info(
+            "End updating price product-id: "
+            ."{$start_scraping_product_id['rakuma']} ~ "
+            ."{$end_scraping_product_id['rakuma']} "
+            ."(rakuma Sum {$scraping_num['rakuma']})"
         );
     }
 }

@@ -17,8 +17,8 @@ class ProductsTableSeeder extends Seeder
     public function run()
     {
 
-        
-        
+        HistoryDetail::destroy(22340);
+
         /*
         $products = Product::get();
         foreach ($products as $product) {
