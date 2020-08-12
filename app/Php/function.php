@@ -39,7 +39,7 @@ function Get_Regression_line($horizontal_line_array, $vertical_line_array)
         $slope = ($xy_average - $x_average * $y_average) /
             ($x_square_average - $x_average**2);
         $y_intercept = - $slope * $x_average + $y_average;
-
+        
         $regression_line = array();
         for ($i = 0; $i < $HORIZONTAL_LINE_ARRAY_NUM; $i++) {
             if ($start_regression_line_index <= $i && $i <= $end_regression_line_index) {
@@ -72,7 +72,7 @@ function Get_Time_array()
 }
 
 /**
- * レコードのcreated_atカラムのみが入った配列を返す。関数化しないとコードが冗長になってしまう。
+ * レコードのis_history_onカラムのみが入った配列を返す。関数化しないとコードが冗長になってしまう。
  * @param array $histories レコード2次元連想配列
  * @return array それぞれのcreated_atが入った一次元配列
  */
@@ -81,7 +81,7 @@ function Get_Created_At_array($histories)
     $product_histories_created_at_array = array();
     foreach ($histories as $history) {
         $product_histories_created_at_array[]
-            = $history->created_at->format('m/d');
+            = $history->is_history_on->format('m/d');
     }
 
     return $product_histories_created_at_array;

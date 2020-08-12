@@ -52,7 +52,6 @@ class InspectHistoryDetailTable extends Command
         require app_path('Php/vardata.php');
         require app_path('Php/function.php');
         
-        $SAMPLE_NUM_LIST = [1, 5, 10];
         $NOW_YMD = Carbon::now('Asia/Tokyo')->toDateString();
         $EXECUTABLE_FILE = app_path('Python/scrape.py');
         $scraping_num = array(
@@ -60,8 +59,8 @@ class InspectHistoryDetailTable extends Command
             'rakuma' => 0
         );
 
-        $START_PRODUCT_ID = 1;
-        $END_PRODUCT_ID = 500;
+        $START_PRODUCT_ID = 501;
+        $END_PRODUCT_ID = 519;
 
         $inspection_object = array();
 
@@ -124,7 +123,7 @@ class InspectHistoryDetailTable extends Command
                                 'title' => $scraping_product['title'],
                                 'url' => $scraping_product['url'],
                                 'img_url' => $scraping_product['image'],
-                                'status' => $scraping_product['status'],
+                                'status' => $scraping_product['status'], // statusは適当 後から変更可
                             );
                         }
                         Log::info("completed product-id: {$product->id}, flema-name: '{$flema_name}'");
@@ -178,7 +177,7 @@ class InspectHistoryDetailTable extends Command
                                 'title' => $scraping_product['title'],
                                 'url' => $scraping_product['url'],
                                 'img_url' => $scraping_product['image'],
-                                'status' => $scraping_product['status'],
+                                'status' => $scraping_product['status'], // statusは適当 後から変更可
                             );
                             $db_products_2[] = $scraping_product;
                         }
@@ -205,153 +204,11 @@ class InspectHistoryDetailTable extends Command
                             'title' => $scraping_product['title'],
                             'url' => $scraping_product['url'],
                             'img_url' => $scraping_product['image'],
-                            'status' => $scraping_product['status'],
+                            'status' => $scraping_product['status'], // statusは適当 後から変更可
                         );
                     }
                     Log::info("completed product-id: {$product->id}, flema-name: '{$flema_name}'");
                     continue; // 明示的
-
-
-                    
-
-                    /*
-                    $start_detail_id = 0;
-                    $end_detail_id = 0;
-
-
-
-                    // IF pythonデータはある & dbデータもある
-                    //    & pythonデータの最も古い商品がdbにない
-                    // DO delete all this-product-record in db, insert all this-python-product in db
-                    if (HistoryDetail::where('product_id', $product->id)
-                        ->where('flema', $flema_name)
-                        ->where('url', $flema_data['list'][0]['url'])
-                        ->doesntExist()
-                    ) {
-                        $inspection_object[$product->id][$flema_name]['error_contents']
-                            = 'python-start-product-id doesnt exist in db';
-
-                        $inspection_object[$product->id][$flema_name]
-                        ['history_details_table']['deleted_id'] = $all_history_details->pluck('id');
-
-                        foreach ($flema_data['list'] as $flema_product) { // oldest → latest
-                            $inspection_object[$product->id][$flema_name]
-                            ['history_details_table']['created'][] = array(
-                                'product_id' => $product->id,
-                                'flema' => $flema_name,
-                                'price' => $flema_product['price'],
-                                'title' => $flema_product['title'],
-                                'url' => $flema_product['url'],
-                                'img_url' => $flema_product['image'],
-                                'status' => $flema_product['status'],
-                            );
-                        }
-
-                        continue;
-                    }
-
-                    $start_detail_id = $all_history_details
-                                        ->where('url', $flema_data['list'][0]['url'])
-                                        ->first()->id;
-                    
-                    $end_detail_id
-                        = $all_history_details[count($all_history_details) - 1]->id;
-                    $end_detail_url
-                        = $all_history_details[count($all_history_details) - 1]->url;
-
-                    // IF pythonデータはある & dbデータもある
-                    //    & pythonデータの最も古い商品がdbにある
-                    //    & dbの開始商品id > dbの終了商品id
-                    // DO
-                    if ($start_detail_id > $end_detail_id) {
-                        $inspection_object[$product->id][$flema_name]['error_contents']
-                            = 'start-product-id > end-detail-id';
-                        
-                        $inspection_object[$product->id][$flema_name]
-                        ['history_details_table']['deleted_id']
-                            = $comparison_history_details->pluck('id');
-
-                        foreach ($flema_data['list'] as $flema_product) { // oldest → latest
-                            $inspection_object[$product->id][$flema_name]
-                            ['history_details_table']['created'][] = array(
-                                'product_id' => $product->id,
-                                'flema' => $flema_name,
-                                'price' => $flema_product['price'],
-                                'title' => $flema_product['title'],
-                                'url' => $flema_product['url'],
-                                'img_url' => $flema_product['image'],
-                                'status' => $flema_product['status'],
-                            );
-                        }
-
-                        continue;
-                    }
-
-                    // $end_detail_idより新しいpythonデータは削除
-                    $flema_data_index = array_search(
-                        $end_detail_url,
-                        array_column($flema_data['list'], 'url')
-                    );
-
-                    $comparison_python_products = array();
-                    for ($i = 0; $i <= $flema_data_index; $i++) { // oldest → latest
-                        $comparison_python_products[] = $flema_data['list'][$i];
-                    }
-                    
-                    // $all_history_detailsをあえて使わない、インデックスが変になるため
-                    $comparison_history_details
-                        = HistoryDetail::where('product_id', $product->id)
-                        ->where('flema', $flema_name)
-                        ->whereBetween('id', [$start_detail_id, $end_detail_id])
-                        ->get();
-                    
-                    
-                    // errror時に出力するpython-db比較用オブジェクトを作成
-                    $comparison_python_and_db = array();
-                    if (count($comparison_python_products) > count($comparison_history_details)) {
-                        $comparison_python_and_db_count = count($comparison_python_products);
-                    } else {
-                        $comparison_python_and_db_count = count($comparison_history_details);
-                    }
-                    for ($i = 0; $i < $comparison_python_and_db_count; $i++) {
-                        $comparison_python_and_db[] = array(
-                            'python' => isset($comparison_python_products[$i])
-                                        ? $comparison_python_products[$i]
-                                        : 0,
-                            'db' => isset($comparison_history_details[$i])
-                                    ? $comparison_history_details[$i]->toArray()
-                                    : 0
-                        );
-                    }
-
-                    // python-dbで重複していない商品配列を作成
-                    $duplication_products_python_and_db = array_diff(
-                        array_column($comparison_python_products, 'url'),
-                        array_column($comparison_history_details->toArray(), 'id')
-                    );
-
-
-
-                    // IF pythonデータはある & dbデータもある & pythonデータの最も古い商品がdbにある
-                    //    & dbの開始商品id <= dbの終了商品id & python商品と比較用db商品の数が違う
-                    // DO
-                    if (count($comparison_python_products) !== count($comparison_history_details)) {
-                        $inspection_object[$product->id][$flema_name]['error_contents']
-                             = 'start-product-id > end-detail-id';
-
-                        continue;
-                    }
-
-                    // pythonデータを基準
-                    foreach ($comparison_python_products as $i => $flema_product) {
-                        if ($flema_product['url']
-                            === $comparison_history_details[$i]['url']) {
-                            continue;
-                        }
-                        $inspection_object[$product->id][$flema_name]['error_contents']
-                            = 'different products url';
-                    }
-                    */
 
                 // IF pythonデータが全く無いのに、dbにデータがある場合
                 // DO db上のこの商品のデータを全削除

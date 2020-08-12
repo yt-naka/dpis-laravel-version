@@ -34,57 +34,74 @@ class ProductController extends Controller
                 ->where('flea_market_name', $flema)
                 ->where(function ($query) {
                     $query->where('sample_num', 0)->orWhere('sample_num', 10);
-                })->oldest()->get();
+                })->oldest('is_history_on')->get();
 
-            foreach ($histories[$flema] as $history) {
-                if ($history->start_detail_id === 0
-                    || $history->end_detail_id === 0) {
-                    continue;
-                }
-                $aaa = HistoryDetail::where('product_id', $product->id)
-                        ->where('flema', $flema)
-                        ->whereBetween('id', [$history->start_detail_id, $history->end_detail_id])
-                        ->where('status', 1)->get();
-                //$aaa = array_reverse($aaa);
-                $average_price_calculation_result[$flema]
-                [$history->created_at->format('m/d')]
-                    = $aaa->where('status', 1)->avg('price');
-            }
 
-            $history_details[$flema]
+                
+
+            // history_detailsテーブルを基に平均価格を計算
+            $success_history_details[$flema]
                 = HistoryDetail::where('product_id', $product->id)
                                ->where('flema', $flema)
-                               ->where('status', 1)->get()->toArray();
-            $reverse = $history_details[$fle]
+                               ->where('status', 1)->get();
+            $sample_num_array = array('1' => array(), '5' => array(), '10' => array());
+            
+            $start_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
+            $end_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
 
-            $average_price[$flema] = round(
-                $reverse
-            );
+            $reverse_success_history_details = array_reverse($success_history_details[$flema]->toArray());
+            foreach ($reverse_success_history_details as $success_history_detail) {
+                foreach ($SAMPLE_NUM_LIST as $sample_num) {
+                    if (count($sample_num_array[$sample_num]) >= $sample_num) {
+                        continue;
+                    }
+                    $sample_num_array[$sample_num][] = $success_history_detail['price'];
 
+                    if ($end_history_detail_id[$sample_num] === 0) {
+                        $end_history_detail_id[$sample_num] = $success_history_detail['id'];
+                    }
+                    $start_history_detail_id[$sample_num] = $success_history_detail['id'];
+                }
+            }
 
+            //dd($sample_num_array);
+            foreach ($SAMPLE_NUM_LIST as $sample_num) {
+                if (count($sample_num_array[$sample_num]) === 0) {
+                    $average_prices[$flema]["sample_num_{$sample_num}"] = 0;
+                    continue;
+                }
+                $average_prices[$flema]["sample_num_{$sample_num}"]
+                    = array_sum($sample_num_array[$sample_num])
+                        / count($sample_num_array[$sample_num]);
+            }
+            //dd($end_history_detail_id);
+            // ここまで
+            
 
             $histories_created_at_array[$flema]
                 = Get_Created_At_array($histories[$flema]);
 
-            $average_prices[$flema] = Get_Vertical_Line_array(
+            
+            $vertical_line_array[$flema] = Get_Vertical_Line_array(
                 $times,
                 $histories_created_at_array[$flema],
                 $histories[$flema]
             ); /* my function */
             
             $regression_line_array[$flema]
-                = Get_Regression_line($times, $average_prices[$flema]);
+                = Get_Regression_line($times, $vertical_line_array[$flema]);
+            //dd($regression_line_array[$flema]);
         }
         
         $KEYWORDS = $product->name.'+'.$product->product_id.'+ドラゴンボールヒーローズ';
 
         return view('product')->with([
-            'history_details' => $history_details,
+            'history_details' => $success_history_details,
             'keywords' => $KEYWORDS, 'times' => $times,
             'regression_line_array' => $regression_line_array,
-            'average_price' => $average_price,
             'product_id' => $product->id,
             'average_prices' => $average_prices,
+            'vertical_line_array' => $vertical_line_array,
             'average_price_calculation_result'
                 => $average_price_calculation_result
         ]);

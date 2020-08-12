@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class History extends Model
 {
-    protected $guarded = [
-        'product_id', 'average_price', 'flea_market_name', 'sample_num'
+    protected $fillable = [
+        'average_price', 'start_detail_id', 'end_detail_id'
     ];
+    protected $guarded = [
+        'product_id', 'flea_market_name', 'sample_num', 'is_history_on'
+    ];
+    protected $dates = ['is_history_on'];
 }

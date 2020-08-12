@@ -4,8 +4,8 @@
 <canvas id="price-chart"></canvas>
 <p>検索ワード {{ $keywords }}</p>
 <h1>カードID {{ $product_id }}</h1>
-<h1>ラクマ平均価格 {{ $average_price['rakuma'] }}</h1>
-<h1>ヤフオク平均価格 {{ $average_price['yafuoku'] }}</h1>
+<h1>ラクマ平均価格 {{ $average_prices['rakuma']['sample_num_10'] }}</h1>
+<h1>ヤフオク平均価格 {{ $average_prices['yafuoku']['sample_num_10'] }}</h1>
 <?php $pattern = '/https?:\/{2}[\w\/:%#\$&\?\(\)~\.=\+\-]+/'; ?>
 
 @foreach($average_price_calculation_result as $flema => $aaa)
@@ -34,7 +34,7 @@
                 <td><a href="{{$rakuma_history_detail->url}}"><img src="{{$rakuma_history_detail->img_url}}" style="width:100px;height:auto;"></a></td>
                 <td>{{ $rakuma_history_detail->price }}</td>
                 <td>{{ $rakuma_history_detail->title }}</td>
-                <td>{{ $rakuma_history_detail->created_at->format('Y/m/d') }}</td>
+                <td>{{ $rakuma_history_detail->is_history_on }}</td>
                 <td>{{ $rakuma_history_detail->status }}</td>
             </tr>
         @endforeach        
@@ -60,7 +60,7 @@
                 <td><a href="{{$yafuoku_history_detail->url}}"><img src="{{$yafuoku_history_detail->img_url}}" style="width:100px;height:auto;"></a></td>
                 <td>{{ $yafuoku_history_detail->price }}</td>
                 <td>{{ $yafuoku_history_detail->title }}</td>
-                <td>{{ $yafuoku_history_detail->created_at->format('Y/m/d') }}</td>
+                <td>{{ $yafuoku_history_detail->is_history_on }}</td>
                 <td>{{ $yafuoku_history_detail->status }}</td>
             </tr>
         @endforeach        
@@ -76,17 +76,18 @@
             datasets: [
                 {
                     label: 'ヤフオク',
-                    data: @json($average_prices['yafuoku']),
+                    data: @json($vertical_line_array['yafuoku']),
                     fill:false, 
                 },
                 {
                     label: 'ラクマ',
-                    data: @json($average_prices['rakuma']),
+                    data: @json($vertical_line_array['rakuma']),
                     fill:false, 
                 },
                 {
                     label: 'ヤフオク回帰直線',
                     data: @json($regression_line_array['yafuoku']),
+                    
                     pointRadius: 0,
                     pointHitRadius: 0,
                     fill:false, 

@@ -50,8 +50,6 @@ class ProductsController extends Controller
 
         $horizontal_line_array = get_time_array(); /* my function */
 
-        
-
         foreach ($products as $product) {
             $product->product_id_for_img
                 = str_replace('PR', '', str_replace('+', '', $product->product_id));
@@ -72,7 +70,7 @@ class ProductsController extends Controller
                 $histories['yafuoku'] = History::where('product_id', $product->id)
                     ->where('flea_market_name', 'yafuoku')->where(function ($query) {
                         $query->where('sample_num', 0)->orWhere('sample_num', 10);
-                    })->oldest()->get();
+                    })->oldest('is_history_on')->get();
 
                 $histories_created_at_array['yafuoku'] = Get_Created_At_array(
                     $histories['yafuoku']

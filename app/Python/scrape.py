@@ -20,8 +20,8 @@ from PIL import Image
 start_time = time.time()
 
 args = sys.argv
-if args[2] == 'yafuoku' or args[2] == 'rakuma'\
-        or args[2] == 'ytest' or args[2] == 'rtest':
+if args[2] == 'yafuoku' or args[2] == 'rakuma' or args[2] == 'yafuokuTen'\
+        or args[2] == 'rakumaTen' or args[2] == 'ytest' or args[2] == 'rtest':
     serch_words = args[1].split('+')
     card_name = serch_words[0]
     if len(serch_words) == 3:  # ex ヤムチャ+HUM4-22+ドラゴンボールヒーローズ
@@ -231,11 +231,10 @@ def scrape_and_set_data(flema_name):
     for i, product in enumerate(data[flema_name]["all_products"]):
         set_product(data, product, flema_name)
 
-        '''
-        if data[flema_name]["products"]["success_num"]\
+        if (args[2] == 'yafuokuTen' or args[2] == 'rakumaTen')\
+            and data[flema_name]["products"]["success_num"]\
                 >= MAX_SAMPLE_NUM:
             break
-        '''
 
         if flema_name == 'yafuoku' and len(
                 data[flema_name]["products"]["list"])\
@@ -282,10 +281,10 @@ def main():
         scrape_and_set_data(flema_name)
 
 
-if args[2] == 'yafuoku':
+if args[2] == 'yafuoku' or args[2] == 'yafuokuTen':
     scrape_and_set_data('yafuoku')
     show_any_flema_products_object('yafuoku')
-elif args[2] == 'rakuma':
+elif args[2] == 'rakuma' or args[2] == 'rakumaTen':
     scrape_and_set_data('rakuma')
     show_any_flema_products_object('rakuma')
 elif args[2] == 'UpdatePrice':
