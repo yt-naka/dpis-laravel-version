@@ -41,7 +41,9 @@ class ProductController extends Controller
 
 
             $history_details[$flema] = HistoryDetail::where('product_id', $product->id)
-                                        ->where('flema', $flema)->get();
+                                        ->where('flema', $flema)
+                                        ->orderBy('oldest_to_latest_number', 'asc')
+                                        ->get();
             $reverse_history_details[$flema] = array_reverse($history_details[$flema]->toArray());
 
             // history_detailsテーブルを基に平均価格を計算
@@ -54,7 +56,8 @@ class ProductController extends Controller
             $start_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
             $end_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
 
-            $reverse_success_history_details[$flema] = array_reverse($success_history_details[$flema]->toArray());
+            $reverse_success_history_details[$flema]
+                = array_reverse($success_history_details[$flema]->toArray());
             foreach ($reverse_success_history_details[$flema] as $success_history_detail) {
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
                     if (count($sample_num_array[$sample_num]) >= $sample_num) {

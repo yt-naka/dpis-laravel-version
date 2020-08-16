@@ -115,7 +115,9 @@ class CreateHistoryUsingHistoryDetail extends Command
                 $average_prices = array();
                 $success_history_details = HistoryDetail::where('product_id', $product->id)
                                             ->where('flema', $flema_name)
-                                            ->where('status', 1)->get(); // 古 → 新
+                                            ->where('status', 1)
+                                            ->orderBy('oldest_to_latest_number', 'asc')
+                                            ->get(); // 古 → 新
                 $reverse_success_history_details
                     = array_reverse($success_history_details->toArray()); // 新 → 古
                 $sample_product_price_list = array('1' => array(), '5' => array(), '10' => array());

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class HistoryDetail extends Model
 {
     protected $fillable = [
-        'status'
+        'status', 'oldest_to_latest_number'
     ];
 
     protected $guarded = [

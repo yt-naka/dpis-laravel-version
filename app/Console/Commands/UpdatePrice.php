@@ -95,27 +95,44 @@ class UpdatePrice extends Command
                 $end_scraping_product_id[$flema_name] = $product->id;
                 $flema_data = json_decode($outputs1[0], true);
                 
-                //oldest → latest success-product 10個
-                /*$base_oldest_to_latest_number = 0;
-                foreach ($flema_data['list'] as $i => $flema_product) {
-                    if (in_array($flema_product['url'], $history_details_url[$flema_name])) {
-                        $base_oldest_to_latest_number = HistoryDetail::where('product_id', $product->id)
-                                                        ->where('flema', $flema_name)
-                                                        ->where('url', $flema_product['url'])
-                                                        ->first()->oldest_to_latest_number;
+
+
+                $all_history_details = HistoryDetail::where('product_id', $product->id)
+                                        ->where('flema', $flema_name)->get();
+                // スクレイピングできなかった過去の商品の配列を作成
+                $past_products = array();
+                $flema_product_url_list = array_column($flema_data['list'], 'url');
+                foreach ($all_history_details as $history_detail) {
+                    if (!in_array($history_detail->url, $flema_product_url_list)) {
+                        $past_products[] = $history_detail;
                     }
                 }
-                if ($base_oldest_to_latest_number === 0) {
-                    exit;
+                // 現在スクレイピングできた商品のoldest-to-latest-numberは、
+                // 少なくとも過去商品の最大値+1以上でなければならない
+                if (count($past_products) > 0) {
+                    $base_oldest_to_latest_number = max(array_column($past_products, 'oldest_to_latest_number')) + 1;
+                    if ($base_oldest_to_latest_number === 0) {
+                        $base_oldest_to_latest_number = 1;
+                    }
+                } else {
+                    $base_oldest_to_latest_number = 1;
                 }
-                $flema_product_number = 0;*/
+
+                
                 foreach ($flema_data['list'] as $i => $flema_product) {
                     if (in_array($flema_product['url'], $history_details_url[$flema_name])) {
+                        $current_history_detail = HistoryDetail::where('product_id', $product->id)
+                                                    ->where('flema', $flema_name)
+                                                    ->where('url', $flema_product['url'])
+                                                    ->first();
+                        $current_history_detail->fill([
+                            'oldest_to_latest_number' => $base_oldest_to_latest_number + $i
+                        ])->save();
                         continue;
                     }
-
+                    
                     /*if ($flema_product['status'] === 1) {
-                        $arguments2 = "{$product->product_id} '{$history_detail->img_url}' CheckCardImg";
+                        $arguments2 = "{$product->product_id} '{$flema_product->img_url}' CheckCardImg";
                         unset($outputs2);
                         exec("{$PYTHON3_PATH} {$EXECUTABLE_FILE} {$arguments2}", $outputs2);
                         $flema_product['status'] = (int)$outputs2[0];
@@ -129,7 +146,7 @@ class UpdatePrice extends Command
                         'url' => $flema_product['url'],
                         'img_url' => $flema_product['image'],
                         'status' => $flema_product['status'], // statusは適当 あとから変更可
-                        'oldest_to_latest_number' => 0,
+                        'oldest_to_latest_number' => $base_oldest_to_latest_number + $i,
                         'is_added_on' => $NOW_YMD
                     ]);
                     $history_details_url[$flema_name][] = $flema_product['url'];
