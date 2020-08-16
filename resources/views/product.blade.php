@@ -30,12 +30,12 @@
     <tbody>
         @foreach($history_details['rakuma'] as $i => $rakuma_history_detail)
             <tr>
-                <th scope="row">{{ $i }}</th>
-                <td><a href="{{$rakuma_history_detail->url}}"><img src="{{$rakuma_history_detail->img_url}}" style="width:100px;height:auto;"></a></td>
-                <td>{{ $rakuma_history_detail->price }}</td>
-                <td>{{ $rakuma_history_detail->title }}</td>
-                <td>{{ $rakuma_history_detail->is_history_on }}</td>
-                <td>{{ $rakuma_history_detail->status }}</td>
+                <th scope="row">{{ $i + 1 }}</th>
+                <td><a href="{{$rakuma_history_detail['url']}}"><img src="{{$rakuma_history_detail['img_url']}}" style="width:100px;height:auto;"></a></td>
+                <td>{{ $rakuma_history_detail['price'] }}</td>
+                <td>{{ $rakuma_history_detail['title'] }}</td>
+                <td>{{ $rakuma_history_detail['created_at'] }}</td>
+                <td>{{ $rakuma_history_detail['status'] }}</td>
             </tr>
         @endforeach        
     </tbody>
@@ -56,12 +56,12 @@
     <tbody>
         @foreach($history_details['yafuoku'] as $j => $yafuoku_history_detail)
             <tr>
-                <th scope="row">{{ $j }}</th>
-                <td><a href="{{$yafuoku_history_detail->url}}"><img src="{{$yafuoku_history_detail->img_url}}" style="width:100px;height:auto;"></a></td>
-                <td>{{ $yafuoku_history_detail->price }}</td>
-                <td>{{ $yafuoku_history_detail->title }}</td>
-                <td>{{ $yafuoku_history_detail->is_history_on }}</td>
-                <td>{{ $yafuoku_history_detail->status }}</td>
+                <th scope="row">{{ $j + 1 }}</th>
+                <td><a href="{{$yafuoku_history_detail['url']}}"><img src="{{$yafuoku_history_detail['img_url']}}" style="width:100px;height:auto;"></a></td>
+                <td>{{ $yafuoku_history_detail['price'] }}</td>
+                <td>{{ $yafuoku_history_detail['title'] }}</td>
+                <td>{{ $yafuoku_history_detail['created_at'] }}</td>
+                <td>{{ $yafuoku_history_detail['status'] }}</td>
             </tr>
         @endforeach        
     </tbody>

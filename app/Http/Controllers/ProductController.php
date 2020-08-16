@@ -19,7 +19,10 @@ class ProductController extends Controller
         $product = Product::where('product_id', $request->product_id)->first();
         
         $histories = array();
+        $success_history_details = array();
+        $reverse_success_history_details = array();
         $history_details = array();
+        $reverse_history_details = array();
         $average_price = array();
 
         $times = get_time_array();
@@ -37,7 +40,9 @@ class ProductController extends Controller
                 })->oldest('is_history_on')->get();
 
 
-                
+            $history_details[$flema] = HistoryDetail::where('product_id', $product->id)
+                                        ->where('flema', $flema)->get();
+            $reverse_history_details[$flema] = array_reverse($history_details[$flema]->toArray());
 
             // history_detailsテーブルを基に平均価格を計算
             $success_history_details[$flema]
@@ -49,8 +54,8 @@ class ProductController extends Controller
             $start_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
             $end_history_detail_id = array(1 => 0, 5 => 0, 10 => 0);
 
-            $reverse_success_history_details = array_reverse($success_history_details[$flema]->toArray());
-            foreach ($reverse_success_history_details as $success_history_detail) {
+            $reverse_success_history_details[$flema] = array_reverse($success_history_details[$flema]->toArray());
+            foreach ($reverse_success_history_details[$flema] as $success_history_detail) {
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
                     if (count($sample_num_array[$sample_num]) >= $sample_num) {
                         continue;
@@ -96,7 +101,7 @@ class ProductController extends Controller
         $KEYWORDS = $product->name.'+'.$product->product_id.'+ドラゴンボールヒーローズ';
 
         return view('product')->with([
-            'history_details' => $success_history_details,
+            'history_details' => $reverse_history_details,
             'keywords' => $KEYWORDS, 'times' => $times,
             'regression_line_array' => $regression_line_array,
             'product_id' => $product->id,

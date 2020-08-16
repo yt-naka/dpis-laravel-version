@@ -14,7 +14,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script> 
     <script type="text/javascript" src="https://github.com/nagix/chartjs-plugin-colorschemes/releases/download/v0.2.0/chartjs-plugin-colorschemes.min.js"></script>
 
-	<title>PIS</title>
+	<title>テストPIS</title>
 </head>
 <body>
     <nav class="navbar navbar-expand-sm navbar-light bg-light fixed-top" id="header">

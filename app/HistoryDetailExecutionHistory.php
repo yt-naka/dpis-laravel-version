@@ -9,4 +9,8 @@ class HistoryDetailExecutionHistory extends Model
     protected $guarded = [
         'product_id', 'flema'
     ];
+    public function product()
+    {
+        return $this->belongTo('App\Product');
+    }
 }

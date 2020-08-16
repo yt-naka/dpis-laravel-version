@@ -52,19 +52,41 @@ class CreateHistoryUsingHistoryDetail extends Command
         require app_path('Php/function.php');
 
         $IS_HISTORY_ON = Carbon::now('Asia/Tokyo')->toDateString(); // 任意
-        $products = Product::get();
+        
+        Log::info("Attempting to start create-history-using-history-detail on {$IS_HISTORY_ON} ...");
 
+        $products = Product::get();
         foreach ($products as $product) {
             foreach ($FLEMA_LIST as $flema_name) {
                 if (HistoryDetailExecutionHistory::where('product_id', $product->id)
-                    ->where('flema', $flema_name)->where('is_history_on', $IS_HISTORY_ON)->doesntExist()) {
-                    Log::error("can't start creating history using history-detail");
+                    ->where('flema', $flema_name)->whereDate('created_at', $IS_HISTORY_ON)
+                    ->doesntExist()) {
+                    Log::error("Can't start because you haven't scraped all products yet");
                     exit;
                 }
             }
         }
 
-        Log::info('start creating history using history-detail');
+        foreach ($products as $product) {
+            foreach ($FLEMA_LIST as $flema_name) {
+                foreach ($SAMPLE_NUM_LIST as $sample_num) {
+                    if (History::where('product_id', $product->id)
+                        ->where('flea_market_name', $flema_name)
+                        ->where('is_history_on', $IS_HISTORY_ON)
+                        ->where('sample_num', $sample_num)->doesntExist()) {
+                        // history_detail_execution_historyが全て実行され、
+                        // どれか一つでもhistoryがない場合、メイン処理実行
+                        goto main;
+                    }
+                }
+            }
+        }
+
+        Log::warning("Can't start because all histories already created");
+        exit;
+
+        main:
+        Log::info('Start');
 
         foreach ($products as $product) {
             foreach ($FLEMA_LIST as $flema_name) {
@@ -77,40 +99,47 @@ class CreateHistoryUsingHistoryDetail extends Command
                             ->where('sample_num', $sample_num)->doesntExist();
                 }
 
+                if (!$doesnt_exist_sample_num['1'] && !$doesnt_exist_sample_num['5']
+                    && !$doesnt_exist_sample_num['10']) {
+                        continue;
+                }
+
+                // ここに来る時点で全商品スクレイピングしてるはずだけど一応
+                if (HistoryDetailExecutionHistory::where('product_id', $product->id)
+                    ->where('flema', $flema_name)->whereDate('created_at', $IS_HISTORY_ON)
+                    ->doesntExist()) {
+                    continue;
+                }
+
                 // history_detailsテーブルを用いて平均価格を計算
                 $average_prices = array();
-                $start_history_detail_id = array('1' => 0, '5' => 0, '10' => 0);
-                $end_history_detail_id = array('1' => 0, '5' => 0, '10' => 0);
-
                 $success_history_details = HistoryDetail::where('product_id', $product->id)
                                             ->where('flema', $flema_name)
                                             ->where('status', 1)->get(); // 古 → 新
                 $reverse_success_history_details
                     = array_reverse($success_history_details->toArray()); // 新 → 古
-                $sample_num_array = array('1' => array(), '5' => array(), '10' => array());
+                $sample_product_price_list = array('1' => array(), '5' => array(), '10' => array());
+                $sample_product_id_list = array('1' => array(), '5' => array(), '10' => array());
 
                 foreach ($reverse_success_history_details as $success_history_detail) {
                     foreach ($SAMPLE_NUM_LIST as $sample_num) {
-                        if (count($sample_num_array["{$sample_num}"]) >= $sample_num) {
+                        if (count($sample_product_price_list["{$sample_num}"]) >= $sample_num) {
                             continue;
                         }
-                        $sample_num_array["{$sample_num}"][] = $success_history_detail['price'];
-
-                        if ($end_history_detail_id["{$sample_num}"] === 0) {
-                            $end_history_detail_id["{$sample_num}"] = $success_history_detail['id'];
-                        }
-                        $start_history_detail_id["{$sample_num}"] = $success_history_detail['id'];
+                        
+                        $sample_product_price_list["{$sample_num}"][] = $success_history_detail['price'];
+                        $sample_product_id_list["{$sample_num}"][] = $success_history_detail['id'];
                     }
                 }
 
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
-                    if (count($sample_num_array["{$sample_num}"]) === 0) {
+                    if (count($sample_product_price_list["{$sample_num}"]) === 0) {
                         $average_prices["sample_num_{$sample_num}"] = 0;
-                        continue;
+                    } else {
+                        $average_prices["sample_num_{$sample_num}"]
+                            = array_sum($sample_product_price_list["{$sample_num}"])
+                                / count($sample_product_price_list["{$sample_num}"]);
                     }
-                    $average_prices["sample_num_{$sample_num}"]
-                        = array_sum($sample_num_array["{$sample_num}"])
-                            / count($sample_num_array["{$sample_num}"]);
                 }
                 //dd($flema_data["average_prices"]);
 
@@ -119,15 +148,16 @@ class CreateHistoryUsingHistoryDetail extends Command
                     if (!$doesnt_exist_sample_num["{$sample_num}"]) {
                         continue;
                     };
-                    History::forceCreate([
+                    $history = History::forceCreate([
                         'product_id' => $product->id,
                         'average_price' => $average_prices["sample_num_{$sample_num}"],
                         'flea_market_name' => $flema_name,
                         'sample_num' => $sample_num,
-                        'start_detail_id' => $start_history_detail_id["{$sample_num}"],
-                        'end_detail_id' => $end_history_detail_id["{$sample_num}"],
+                        'start_detail_id' => 0,
+                        'end_detail_id' => 0,
                         'is_history_on' => $IS_HISTORY_ON
                     ]);
+                    $history->historyDetails()->attach($sample_product_id_list["{$sample_num}"]);
                 }
                 // products
                 if ($flema_name === 'yafuoku') {
@@ -139,6 +169,6 @@ class CreateHistoryUsingHistoryDetail extends Command
             }
         }
 
-        Log::info("completed creating history-details on {$IS_HISTORY_ON}");
+        Log::info("Completed create-history-using-history-detail on {$IS_HISTORY_ON}");
     }
 }

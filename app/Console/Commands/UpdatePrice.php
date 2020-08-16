@@ -44,7 +44,7 @@ class UpdatePrice extends Command
      */
     public function handle()
     {
-        Log::info('Start updating price');
+        Log::info('Start update-price');
         
         require app_path('Php/vardata.php');
         require app_path('Php/function.php');
@@ -64,7 +64,6 @@ class UpdatePrice extends Command
             'rakuma' => 0
         );
 
-        $SAMPLE_NUM_LIST = [1, 5, 10];
         $NOW_YMD = Carbon::now('Asia/Tokyo')->toDateString();
         $EXECUTABLE_FILE = app_path('Python/scrape.py');
 
@@ -85,13 +84,8 @@ class UpdatePrice extends Command
                     continue;
                 }
 
-                HistoryDetailExecutionHistory::forceCreate([
-                    'product_id' => $product->id,
-                    'flema' => $flema_name
-                ]);
-
                 $arguments1 = "{$product->name}+{$product->product_id}+"
-                            ."ドラゴンボールヒーローズ {$flema_name}Ten";
+                            ."ドラゴンボールヒーローズ {$flema_name}";
                 unset($outputs1);
                 exec("{$PYTHON3_PATH} {$EXECUTABLE_FILE} {$arguments1}", $outputs1);
                 $scraping_num[$flema_name]++;
@@ -102,10 +96,31 @@ class UpdatePrice extends Command
                 $flema_data = json_decode($outputs1[0], true);
                 
                 //oldest → latest success-product 10個
+                /*$base_oldest_to_latest_number = 0;
+                foreach ($flema_data['list'] as $i => $flema_product) {
+                    if (in_array($flema_product['url'], $history_details_url[$flema_name])) {
+                        $base_oldest_to_latest_number = HistoryDetail::where('product_id', $product->id)
+                                                        ->where('flema', $flema_name)
+                                                        ->where('url', $flema_product['url'])
+                                                        ->first()->oldest_to_latest_number;
+                    }
+                }
+                if ($base_oldest_to_latest_number === 0) {
+                    exit;
+                }
+                $flema_product_number = 0;*/
                 foreach ($flema_data['list'] as $i => $flema_product) {
                     if (in_array($flema_product['url'], $history_details_url[$flema_name])) {
                         continue;
                     }
+
+                    /*if ($flema_product['status'] === 1) {
+                        $arguments2 = "{$product->product_id} '{$history_detail->img_url}' CheckCardImg";
+                        unset($outputs2);
+                        exec("{$PYTHON3_PATH} {$EXECUTABLE_FILE} {$arguments2}", $outputs2);
+                        $flema_product['status'] = (int)$outputs2[0];
+                    }*/
+
                     HistoryDetail::forceCreate([
                         'product_id' => $product->id,
                         'flema' => $flema_name,
@@ -114,9 +129,16 @@ class UpdatePrice extends Command
                         'url' => $flema_product['url'],
                         'img_url' => $flema_product['image'],
                         'status' => $flema_product['status'], // statusは適当 あとから変更可
+                        'oldest_to_latest_number' => 0,
+                        'is_added_on' => $NOW_YMD
                     ]);
                     $history_details_url[$flema_name][] = $flema_product['url'];
                 }
+
+                HistoryDetailExecutionHistory::forceCreate([
+                    'product_id' => $product->id,
+                    'flema' => $flema_name
+                ]);
             }
 
             if ($scraping_num['yafuoku'] % 50 === 0 && $scraping_num['yafuoku'] !== 0) {

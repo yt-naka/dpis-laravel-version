@@ -13,4 +13,17 @@ class Product extends Model
     protected $guarded = [
         'product_id', 'name', 'rarity', 'mission', 'model'
     ];
+
+    public function histories()
+    {
+        return $this->hasMany('App\History');
+    }
+    public function historyDetails()
+    {
+        return $this->hasMany('App\HistoryDetail');
+    }
+    public function historyDetailExecutionHistories()
+    {
+        return $this->hasMany('App\HistoryDetailExecutionHistory');
+    }
 }

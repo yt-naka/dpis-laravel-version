@@ -59,8 +59,8 @@ class InspectHistoryDetailTable extends Command
             'rakuma' => 0
         );
 
-        $START_PRODUCT_ID = 501;
-        $END_PRODUCT_ID = 519;
+        $START_PRODUCT_ID = 501; // 任意
+        $END_PRODUCT_ID = 519; // 任意
 
         $inspection_object = array();
 
