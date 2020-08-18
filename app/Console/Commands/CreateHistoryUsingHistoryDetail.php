@@ -104,26 +104,43 @@ class CreateHistoryUsingHistoryDetail extends Command
                         continue;
                 }
 
-                // ここに来る時点で全商品スクレイピングしてるはずだけど一応
+                // ここに来る時点で全商品既にスクレイピングしてるはずだけど一応
                 if (HistoryDetailExecutionHistory::where('product_id', $product->id)
                     ->where('flema', $flema_name)->whereDate('created_at', $IS_HISTORY_ON)
                     ->doesntExist()) {
                     continue;
                 }
 
+                /* oldest_to_latest_numberが重複していないかチェック */
+                $each_count = array_count_values(
+                    HistoryDetail::where('product_id', $product->id)
+                    ->where('flema', $flema_name)
+                    ->where('oldest_to_latest_number', '!=', 0)
+                    ->pluck('oldest_to_latest_number')
+                    ->toArray()
+                );
+                if (count($each_count) > 0 && max($each_count) > 1) {
+                    Log::error(
+                        "oldest-to-latest-number error , product-id: {$product->id} "
+                        ."flema: '{$flema_name}'"
+                    );
+                    exit;
+                }
+
                 // history_detailsテーブルを用いて平均価格を計算
                 $average_prices = array();
-                $success_history_details = HistoryDetail::where('product_id', $product->id)
-                                            ->where('flema', $flema_name)
-                                            ->where('status', 1)
-                                            ->orderBy('oldest_to_latest_number', 'asc')
-                                            ->get(); // 古 → 新
-                $reverse_success_history_details
-                    = array_reverse($success_history_details->toArray()); // 新 → 古
+                $oldest_to_latest_success_history_details
+                    = HistoryDetail::where('product_id', $product->id)
+                    ->where('flema', $flema_name)
+                    ->where('status', 1)
+                    ->orderBy('oldest_to_latest_number', 'asc')
+                    ->get();
+                $latest_to_oldest_success_history_details
+                    = array_reverse($oldest_to_latest_success_history_details->toArray()); // 新 → 古
                 $sample_product_price_list = array('1' => array(), '5' => array(), '10' => array());
                 $sample_product_id_list = array('1' => array(), '5' => array(), '10' => array());
 
-                foreach ($reverse_success_history_details as $success_history_detail) {
+                foreach ($latest_to_oldest_success_history_details as $success_history_detail) {
                     foreach ($SAMPLE_NUM_LIST as $sample_num) {
                         if (count($sample_product_price_list["{$sample_num}"]) >= $sample_num) {
                             continue;
@@ -143,13 +160,12 @@ class CreateHistoryUsingHistoryDetail extends Command
                                 / count($sample_product_price_list["{$sample_num}"]);
                     }
                 }
-                //dd($flema_data["average_prices"]);
 
-                // histories
                 foreach ($SAMPLE_NUM_LIST as $sample_num) {
                     if (!$doesnt_exist_sample_num["{$sample_num}"]) {
                         continue;
                     };
+                    /******************************************************************************/
                     $history = History::forceCreate([
                         'product_id' => $product->id,
                         'average_price' => $average_prices["sample_num_{$sample_num}"],
@@ -160,13 +176,7 @@ class CreateHistoryUsingHistoryDetail extends Command
                         'is_history_on' => $IS_HISTORY_ON
                     ]);
                     $history->historyDetails()->attach($sample_product_id_list["{$sample_num}"]);
-                }
-                // products
-                if ($flema_name === 'yafuoku') {
-                    // only yafuoku price ;
-                    $product->fill([
-                        'average_price' => $average_prices['sample_num_10'],
-                    ])->save();
+                    /******************************************************************************/
                 }
             }
         }

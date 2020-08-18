@@ -30,9 +30,11 @@ class Kernel extends ConsoleKernel
     {
         
         
-        $schedule->command('updateprice:info')->timezone('Asia/Tokyo')
+        $schedule->command('history-detail:create')->timezone('Asia/Tokyo')
             ->daily()->withoutOverlapping();
         $schedule->command('history:create')->timezone('Asia/Tokyo')
+            ->hourly()->between('1:00', '6:00')->withoutOverlapping();
+        $schedule->command('product:update')->timezone('Asia/Tokyo')
             ->hourly()->between('1:00', '6:00')->withoutOverlapping();
         /*$schedule->command('snapshot:create')->timezone('Asia/Tokyo')
             ->dailyAt('15:00')->withoutOverlapping();*/

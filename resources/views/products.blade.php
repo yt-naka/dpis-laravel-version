@@ -4,6 +4,7 @@
 <canvas id="top-price-products"></canvas>
 <canvas id="all-products-price-trends"></canvas>
 
+<h1>{{ App\History::sum('average_price') }}</h1>
 <h1>{{ $average_price_sum }}円</h1>
 <h1>{{ $product_num }}枚</h1>
 <h1>Top 50</h1>

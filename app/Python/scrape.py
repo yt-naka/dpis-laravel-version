@@ -17,7 +17,6 @@ from PIL import Image
 # import matplotlib.pyplot as plt
 # sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-start_time = time.time()
 
 args = sys.argv
 if args[2] == 'yafuoku' or args[2] == 'rakuma' or args[2] == 'yafuokuTen'\
@@ -307,7 +306,6 @@ elif args[3] == 'CheckCardImg':
     else:
         print(0)
 
-elapsed_time = time.time() - start_time
 '''
 for aaa in data["rakuma"]["products"]["list"]:
     print(aaa["end_date_time"])
