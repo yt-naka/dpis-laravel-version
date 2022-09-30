@@ -1,3 +1,6 @@
+# これは何ですか？
+公開しているリポジトリ"dpis"とサイトの内容は同じです。実のところ、元々はLaravelというフレームワークを使用してサイトを作りました。なので、このリポジトリのコードの方が先です。ですが、紆余曲折あって、Firebaseで構築するということになり、"dpis"リポジトリが生まれました。
+
 <p align="center"><img src="https://res.cloudinary.com/dtfbvvkyp/image/upload/v1566331377/laravel-logolockup-cmyk-red.svg" width="400"></p>
 
 <p align="center">
